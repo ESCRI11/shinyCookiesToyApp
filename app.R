@@ -48,7 +48,8 @@ ui_page1 <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       actionButton("action_btn", "Set httpOnly cookie!"),
-      actionButton("action_btn2", "Remove httpOnly cookie!")
+      actionButton("action_btn2", "Remove httpOnly cookie!"),
+      textInput("cookie_value", "Cookie value", "value1")
     ),
     mainPanel(
       textOutput("cookie_output")
@@ -56,14 +57,16 @@ ui_page1 <- fluidPage(
   )
 )
 
-ui_page2 <- set_cookie_response(
-  cookie_name = "newCookie",
-  cookie_value = "newCookieValue",
-  http_only = TRUE,
-  secure_only = TRUE,
-  redirect = "/close",
-  same_site = "Strict"
-)
+ui_page2 <- function(req){
+  set_cookie_response(
+    cookie_name = "newCookie",
+    cookie_value = req$HTTP_HEADER_USER_COOKIE,
+    http_only = TRUE,
+    secure_only = TRUE,
+    redirect = "/close",
+    same_site = "Strict"
+  )
+}
 
 ui_page3 <- set_cookie_response(
   cookie_name = "newCookie",
@@ -79,7 +82,7 @@ custom_ui <- function(req) {
    if (req$PATH_INFO == '/') {
      return(ui_page1)
    } else if (req$PATH_INFO == "/cookie") {
-     return(ui_page2)
+     return(ui_page2(req))
    } else if (req$PATH_INFO == "/cookie_remove") {
      return(ui_page3)
    } else if (req$PATH_INFO == "/close") {} else {
@@ -89,7 +92,7 @@ custom_ui <- function(req) {
 
 server <- function(input, output, session) {
   observeEvent(input$action_btn, {
-    session$sendCustomMessage(type = "redirect", message = "aaaa")
+    session$sendCustomMessage(type = "redirect", message = input$cookie_value)
     session$sendCustomMessage(type = "refreshApp", message = "")
   })
 
